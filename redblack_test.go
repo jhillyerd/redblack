@@ -9,7 +9,7 @@ func TestString(t *testing.T) {
 		input  *RBNode
 		expect string
 	}{
-		{&RBNode{}, "B:0(_,_)"},
+		{&RBNode{}, "B:0(,)"},
 		{&RBNode{
 			10, false,
 			&RBNode{5, true, nil, nil},
@@ -18,7 +18,7 @@ func TestString(t *testing.T) {
 				&RBNode{17, false, nil, nil},
 				&RBNode{25, false, nil, nil},
 			},
-		}, "B:10(R:5(_,_),R:20(B:17(_,_),B:25(_,_)))"},
+		}, "B:10(R:5(,),R:20(B:17(,),B:25(,)))"},
 	}
 
 	for _, te := range table {
@@ -41,7 +41,7 @@ func TestRot1Left(t *testing.T) {
 				&RBNode{17, false, nil, nil},
 				&RBNode{25, false, nil, nil},
 			},
-		}, "B:20(R:10(R:5(_,_),B:17(_,_)),B:25(_,_))"},
+		}, "B:20(R:10(R:5(,),B:17(,)),B:25(,))"},
 	}
 
 	for _, te := range table {
@@ -65,7 +65,7 @@ func TestRot1Right(t *testing.T) {
 				&RBNode{17, false, nil, nil},
 				&RBNode{25, false, nil, nil},
 			},
-		}, "B:5(_,R:10(_,R:20(B:17(_,_),B:25(_,_))))"},
+		}, "B:5(,R:10(,R:20(B:17(,),B:25(,))))"},
 	}
 
 	for _, te := range table {
@@ -89,7 +89,7 @@ func TestRot2Left(t *testing.T) {
 				&RBNode{17, false, nil, nil},
 				&RBNode{25, false, nil, nil},
 			},
-		}, "B:17(R:10(R:5(_,_),_),R:20(_,B:25(_,_)))"},
+		}, "B:17(R:10(R:5(,),),R:20(,B:25(,)))"},
 	}
 
 	for _, te := range table {
@@ -113,7 +113,7 @@ func TestRot2Right(t *testing.T) {
 				&RBNode{7, false, nil, nil},
 			},
 			&RBNode{20, true, nil, nil},
-		}, "B:7(R:5(B:1(_,_),_),R:10(_,R:20(_,_)))"},
+		}, "B:7(R:5(B:1(,),),R:10(,R:20(,)))"},
 	}
 
 	for _, te := range table {
@@ -191,6 +191,33 @@ func TestValidate(t *testing.T) {
 		if height != te.expectHeight || errStr != te.expectError {
 			t.Errorf("Validate(%s) => %v, %q, want %v, %q",
 				te.input, height, err, te.expectHeight, te.expectError)
+		}
+	}
+}
+
+func TestInsert(t *testing.T) {
+	table := []struct {
+		vals   []int
+		expect string
+	}{
+		{[]int{1}, "B:1(,)"},
+		{[]int{5, 1, 10}, "B:5(B:1(,),B:10(,))"},
+		{[]int{5, 1, 10, 7}, "B:5(B:1(,),B:10(R:7(,),))"},
+		{[]int{5, 1, 10, 7, 6}, "B:5(B:1(,),B:7(R:6(,),R:10(,)))"},
+		{[]int{1, 5, 6, 7, 10}, "B:5(B:1(,),B:7(R:6(,),R:10(,)))"},
+	}
+
+	for _, te := range table {
+		var root *RBNode
+		for _, val := range te.vals {
+			root = root.Insert(val)
+		}
+		if root.String() != te.expect {
+			t.Errorf("Insert() => %q, want %q", root, te.expect)
+		}
+		if _, err := root.Validate(); err != nil {
+			t.Errorf("Insert() invalid: %s", err)
+			t.Logf("  Tree: %s", root)
 		}
 	}
 }

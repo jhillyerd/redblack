@@ -15,6 +15,62 @@ type RBNode struct {
 	Left, Right *RBNode
 }
 
+// Insert inserts creates a new red node and inserts it into the tree, it then
+// sets the root as black and returns it.
+func (node *RBNode) Insert(val int) *RBNode {
+	node = node.insertRecursive(val)
+	node.Red = false
+	return node
+}
+
+func (node *RBNode) insertRecursive(val int) *RBNode {
+	if node == nil {
+		return &RBNode{val, true, nil, nil}
+	}
+	// Only insert if not a duplicate
+	if val != node.Val {
+		if val < node.Val {
+			node.Left = node.Left.insertRecursive(val)
+			if node.Left.IsRed() {
+				if node.Right.IsRed() {
+					// Case 1: Both children red
+					node.Red = true
+					node.Left.Red = false
+					node.Right.Red = false
+				} else {
+					if node.Left.Left.IsRed() {
+						// Case 2: Red violation on left child
+						node = node.Rot1Right()
+					} else if node.Left.Right.IsRed() {
+						// Case 3: Red violation on right child
+						node = node.Rot2Right()
+					}
+				}
+			}
+		} else {
+			node.Right = node.Right.insertRecursive(val)
+			if node.Right.IsRed() {
+				if node.Left.IsRed() {
+					// Case 1: Both children red
+					node.Red = true
+					node.Left.Red = false
+					node.Right.Red = false
+				} else {
+					if node.Right.Right.IsRed() {
+						// Case 2: Red violation on right child
+						node = node.Rot1Left()
+					} else if node.Right.Left.IsRed() {
+						// Case 3: Red violation on left child
+						node = node.Rot2Left()
+					}
+				}
+			}
+		}
+
+	}
+	return node
+}
+
 // IsRed returns true if this node is red, false if it is black or nil
 func (node *RBNode) IsRed() bool {
 	if node == nil {
@@ -118,7 +174,7 @@ func (node *RBNode) Validate() (int, error) {
 
 func (node *RBNode) String() string {
 	if node == nil {
-		return "_"
+		return ""
 	}
 	color := "B"
 	if node.Red {
